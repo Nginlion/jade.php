@@ -410,11 +410,11 @@ class Lexer implements LexerInterface
                 $count = $this->lastIndents - $indents;
                 $token->type = 'outdent';
                 /*
-                 * When $count is not integer, the while loop would not stop
+                 * When $count is not an integer, the while loop would not stop
                  * until use all the memory that php was allowed.
                  * To solve this, we need to detect whether the length of indent
-                 * can be divided by $this->indentSize, if not we would throw an
-                 * exception.
+                 * can be divided by indent size(default is 2), if not we would 
+                 * throw an exception.
                  * Pls see Row #378 to Row #390
                  */
                 while (--$count) {
