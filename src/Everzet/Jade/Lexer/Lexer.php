@@ -375,6 +375,19 @@ class Lexer implements LexerInterface
             $token      = $this->takeToken('indent', $matches[1]);
             $indents    = mb_strlen($token->value) / 2;
 
+            if (0 != mb_strlen($token->value) % 2) {
+                $message = 'Row #'.$this->lineno.': Invalid indentation found, %d unnecessary spaces';
+
+                if (mb_strlen($token->value) < 2 * ($this->lastIndents + 1)) {
+                    $message = 'Row #'.$this->lineno.': Invalid indentation found, need %d more spaces';
+                }
+
+                throw new Exception(sprintf(
+                    $message
+                    , $indents
+                    , abs(mb_strlen($token->value) - 2 * ($this->lastIndents + 1))
+                ));
+            }
 
             if (mb_strlen($this->input) && "\n" === $this->input[0]) {
                 $token->type = 'newline';
@@ -396,6 +409,14 @@ class Lexer implements LexerInterface
             } elseif ($this->lastIndents > $indents) {
                 $count = $this->lastIndents - $indents;
                 $token->type = 'outdent';
+                /*
+                 * When $count is not integer, the while loop would not stop
+                 * until use all the memory that php was allowed.
+                 * To solve this, we need to detect whether the length of indent
+                 * can be divided by $this->indentSize, if not we would throw an
+                 * exception.
+                 * Pls see Row #378 to Row #390
+                 */
                 while (--$count) {
                     $this->deferToken($this->takeToken('outdent'));
                 }
